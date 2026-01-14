@@ -1,0 +1,34 @@
+.footer {
+  background: var(--primary-blue);
+  color: var(--white);
+  text-align: center;
+  padding: 60px 8%;
+}
+
+.footer h3 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 12px 0;
+}
+
+.footer-links a {
+  text-decoration: none;
+  color: var(--white);
+  transition: .3s;
+}
+
+.footer-links a:hover {
+  color: var(--secondary-orange);
+}
+
+.copy {
+  margin-top: 18px;
+  font-size: 14px;
+  opacity: .8;
+}
