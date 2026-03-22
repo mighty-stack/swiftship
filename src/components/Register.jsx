@@ -38,7 +38,7 @@ function Register() {
       setError("");
       setSuccess("");
 
-      const res = await axios.post("http://localhost:5001/auth/register", {
+      const res = await axios.post("https://swiftship-api-h27z.onrender.com/auth/register", {
         fullName: values.fullName,
         email: values.email,
         phone: values.phone,
