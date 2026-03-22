@@ -1,35 +1,48 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import axios from 'axios'
 import { MapPin, Package, Clock, CheckCircle, User, Phone } from 'lucide-react'
 import Navbar from '../../components/Navbar'
 
-function Tracking() {
-  const { id } = useParams()
+const Tracking = () => {
+  const location = useLocation()
+  const [trackingId, setTrackingId] = useState('')
   const [shipment, setShipment] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
   useEffect(() => {
-    loadShipment()
-  }, [id])
+    const params = new URLSearchParams(location.search)
+    const trackingIdParam = params.get('trackingId')
+    if (trackingIdParam) {
+      setTrackingId(trackingIdParam)
+    }
+  }, [location.search])
 
-  const loadShipment = async () => {
+  const loadShipment = async (id) => {
     try {
       setLoading(true)
       setError('')
+      setShipment(null)
 
       const response = await axios.get(
-        `http://localhost:5001/shipments/${id}`, { 
+        `https://swiftship-api-h27z.onrender.com/shipments/${id}`, { 
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       )
 
       setShipment(response.data)
     } catch (err) {
+      console.error(err)
       setError('Failed to load shipment details')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleTrack = async (e) => {
+    e.preventDefault()
+    if (trackingId.trim()) {
+      await loadShipment(trackingId.trim())
     }
   }
 
@@ -55,17 +68,24 @@ function Tracking() {
     { status: 'delivered', label: 'Delivered', icon: <CheckCircle size={24} /> },
   ]
 
-  const getStepStatus = (step) => {
-    const statusOrder = ['pending', 'picked-up', 'in-transit', 'delivered']
-    const currentIndex = statusOrder.indexOf(shipment?.status)
-    const stepIndex = statusOrder.indexOf(step)
+  const getStepStatus = (stepStatus) => {
+    const statusOrder = [
+      'pending', 
+      'picked-up', 
+      'in-transit', 
+      'delivered'
+    ]
 
-    return stepIndex <= currentIndex ? 'completed' : 'pending'
+    const currentIndex = statusOrder.indexOf(shipment?.status)
+    const stepIndex = statusOrder.indexOf(stepStatus)
+
+    return stepIndex <= currentIndex 
   }
 
   if (loading) {
     return (
       <div className="page-container">
+        <Navbar />
         <div className="spinner"></div>
       </div>
     )
@@ -74,10 +94,24 @@ function Tracking() {
   if (error || !shipment) {
     return (
       <div className="page-container">
-        <div className="card-white" style={{ textAlign: 'center', padding: '48px' }}>
+        <Navbar />
+        <div className="card-white" style={{ textAlign: 'center', padding: '48px', maxWidth: '500px', margin: '80px auto' }}>
           <Package size={64} color="#EF4444" style={{ margin: '0 auto 16px' }} />
-          <h3 style={{ color: '#EF4444' }}>Shipment Not Found</h3>
-          <p style={{ color: '#6B7280' }}>{error || 'Unable to find shipment details'}</p>
+          <h3 style={{ color: '#EF4444' }}>Track Your Shipment</h3>
+          <p style={{ color: '#6B7280', marginBottom: '24px' }}>{error || 'Enter your tracking ID to view shipment details'}</p>
+          <form onSubmit={handleTrack}>
+            <input
+              type="text"
+              placeholder="Enter Tracking ID"
+              value={trackingId}
+              onChange={(e) => setTrackingId(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', marginBottom: '16px' }}
+              required
+            />
+            <button type="submit" className="btn-primary-custom" style={{ width: '100%' }}>
+              Track Shipment
+            </button>
+          </form>
         </div>
       </div>
     )
@@ -342,7 +376,7 @@ function Tracking() {
                 <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '4px' }}>
                   Description
                 </p>
-                <p style={{ fontWeight: '500' }}>{shipment.description}</p>
+                <p style={{ fontWeight: '500' }}>{shipment.package_description}</p>
               </div>
             </div>
           </div>

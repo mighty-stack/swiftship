@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useAppSelector } from "./Store/Hooks";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -46,9 +46,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 // App Component
 // -----------------------------
 const App = () => {
-  const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
-
 
   return (
     <>
@@ -98,15 +96,21 @@ const App = () => {
         />
 
         <Route
-         path="/payment-success" 
-         element={
-         <PaymentUI />
-         }
+          path="/paymentUI"
+          element={
+            <PaymentUI />
+          }
         />
 
+        <Route
+          path="/payment-success"
+          element={
+            <PaymentUI />
+          }
+        />
 
         <Route
-          path="/customer/tracking/:id"
+          path="/customer/tracking"
           element={
             <ProtectedRoute allowedRoles={["customer"]}>
             <Tracking />

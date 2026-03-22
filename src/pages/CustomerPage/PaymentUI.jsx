@@ -1,56 +1,63 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "../../components/axios";
 import { CheckCircle, XCircle, Loader } from "lucide-react";
 import Navbar from "../../components/Navbar";
 
-function PaymentUI() {
-  const navigate = useNavigate();
-  const [status, setStatus] = useState("loading"); // loading | success | error
-  const [message, setMessage] = useState("");
+  const PaymentUI = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [status, setStatus] = useState("loading")
+  const [message, setMessage] = useState("")
+  const [redirected, setRedirected] = useState(false)
+
+  useEffect(() => {
+    const reference = new URLSearchParams(window.location.search).get("reference")
+
+    if (!reference && location.state?.paymentUrl && !redirected) {
+      window.location.href = location.state.paymentUrl
+      setRedirected(true)
+    }
+  }, []);
 
   useEffect(() => {
     const reference = new URLSearchParams(window.location.search).get(
       "reference"
-    );
+    )
+
 
     if (!reference) {
-      setStatus("error");
-      setMessage("Invalid payment reference");
-      return;
+      setStatus("error")
+      setMessage("Invalid payment reference")
+      return
     }
 
     const verifyPayment = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5001/payment/verify/${reference}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+          `/payment/verify/${reference}`
+        )
 
-        if (res.data.status === "success") {
-          setStatus("success");
-          setMessage("Payment successful! Redirecting...");
+        if (res.data.success) {
+          setStatus("success")
+          setMessage("Payment successful! Redirecting...")
 
           setTimeout(() => {
-            navigate("/dashboard");
-          }, 2000);
+            navigate("/dashboard")
+          }, 2000)
         } else {
-          setStatus("error");
-          setMessage("Payment verification failed");
+          setStatus("error")
+          setMessage("Payment verification failed")
         }
       } catch (err) {
-        setStatus("error");
+        setStatus("error")
         setMessage(
           err.response?.data?.message || "Payment verification failed"
-        );
+        )
       }
     };
 
-    verifyPayment();
+    verifyPayment()
   }, [navigate]);
 
   return (
@@ -105,4 +112,4 @@ function PaymentUI() {
   );
 }
 
-export default PaymentUI;
+export default PaymentUI

@@ -17,7 +17,6 @@ const Dashboard = () => {
   const fetchData = useCallback(async () => {
     const token = localStorage.getItem("token");
 
-    // Redirect to login if token missing
     if (!token) {
       navigate("/login");
       return;
@@ -28,7 +27,7 @@ const Dashboard = () => {
       setError(null);
 
       const response = await axios.get(
-        "http://localhost:5001/customer/dashboard",
+        "https://swiftship-api-h27z.onrender.com/customer/dashboard",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -40,11 +39,9 @@ const Dashboard = () => {
       console.error("Error fetching dashboard data:", err);
 
       if (err.response) {
-        // Handle specific backend errors
         if (err.response.status === 401 || err.response.status === 403) {
-          // Token invalid/expired or role denied
-          localStorage.removeItem("token"); // clear invalid token
-          navigate("/login"); // redirect to login
+          localStorage.removeItem("token"); 
+          navigate("/login");
         } else {
           setError(err.response.data.message || "Unable to load dashboard data");
         }
@@ -169,7 +166,7 @@ const Dashboard = () => {
                     <td>{s.delivery_address}</td>
                     <td><span className={`badge-status ${getStatusBadgeClass(s.status)}`}>{s.status}</span></td>
                     <td>{new Date(s.created_at).toLocaleDateString()}</td>
-                    <td><Link to={`/tracking/${s._id}`} className="link-primary">Track</Link></td>
+                    <td><Link to={`/customer/tracking?trackingId=${s.tracking_id}`} className="link-primary">Track</Link></td>
                   </tr>
                 ))}
               </tbody>

@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import axios from "axios";
 import { User, Mail, Phone, Save } from "lucide-react";
 import Navbar from "../../components/Navbar";
-// import { setUser } from "../Store/Slices/authSlice";
+import { setUser } from "../../Store/Slices/authSlice";
 
 const ProfileSchema = Yup.object().shape({
   fullName: Yup.string().required("Full name is required"),
@@ -35,7 +35,7 @@ function Profile() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:5001/customer/profile",
+        "https://swiftship-api-h27z.onrender.com/customer/profile",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -56,15 +56,15 @@ function Profile() {
       setSuccess("");
 
       const res = await axios.put(
-        "http://localhost:5001/customer/profile",
+        "https://swiftship-api-h27z.onrender.com/customer/profile",
         values,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      setProfileData(res.data.user);
-      dispatch(setUser(res.data.user));
+      setProfileData(res.data);
+      dispatch(setUser(res.data));
 
       setSuccess("Profile updated successfully!");
       setTimeout(() => setSuccess(""), 3000);

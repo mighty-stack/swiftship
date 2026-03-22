@@ -1,12 +1,10 @@
 import { useState } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { Formik, Form, Field } from 'formik'
 import * as Yup from 'yup'
-import axios from 'axios'
+import axios from '../../components/axios'
 import Navbar from '../../components/Navbar'
-
-
 import { Package, MapPin, Truck } from 'lucide-react'
 
 const BookShipmentSchema = Yup.object().shape({
@@ -34,30 +32,29 @@ const BookShipmentSchema = Yup.object().shape({
 })
 
 function BookShipment() {
-  const dispatch = useDispatch()
   const navigate = useNavigate()
   const { user } = useSelector(state => state.auth)
   const [error, setError] = useState('') 
 
   const calculatePrice = (weight, packageType) => {
+    const w = Number(weight)
     let basePrice = 1000
-    let weightCharge = weight * 100
+    let weightCharge = w * 100
     let typeMultiplier = packageType === 'fragile' ? 1.5 : packageType === 'express' ? 2 : 1
     return Math.round((basePrice + weightCharge) * typeMultiplier)
   }
 
 const handleSubmit = async (values, { setSubmitting }) => {
+  console.log("BookShipment handleSubmit values", values)
   try {
-    setError('');
+    setError('')
 
-    const price = calculatePrice(values.weight, values.packageType);
-    const trackingId = 'TRK' + Date.now().toString().slice(-8);
+    const price = calculatePrice(values.weight, values.packageType)
+    console.log("Calculated price", price)
 
-    
     const shipmentRes = await axios.post(
-      "http://localhost:5001/customer/shipments",
+      "/shipments",
       {
-        tracking_id: trackingId,
         pickup_address: values.pickupAddress,
         pickup_city: values.pickupCity,
         pickup_state: values.pickupState,
@@ -76,25 +73,40 @@ const handleSubmit = async (values, { setSubmitting }) => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         }
       }
-    );
+    )
+
+      const shipmentId = shipmentRes.data._id;
 
     const payRes = await axios.post(
-      "http://localhost:5001/payment/init",
+      "https://swiftship-api-h27z.onrender.com/payment/initialize",
       {
         email: user.email,
         amount: price,
-        shipmentId: shipmentRes.data.id
+        shipmentId
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        }
       }
-    );
+    )
 
-    window.location.href = payRes.data.authorization_url;
+    localStorage.setItem("trackingShipmentId", shipmentId)
+
+    navigate("/paymentUI", {
+      state: { 
+        paymentUrl: payRes.data.data.authorization_url 
+      } 
+    })
 
   } catch (err) {
+    console.error("BookShipment error", err);
     setError(err.response?.data?.message || "Payment failed");
   } finally {
-    setSubmitting(false);
+    setSubmitting(false)
   }
-};
+}
+
   return (
     <div className="page-container">
       <Navbar />
